@@ -8,6 +8,10 @@ function showStatus(message, type) {
   statusEl.className = `status status-${type}`;
 }
 
+window.api.onProgress((message) => {
+  showStatus(message, 'info');
+});
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
