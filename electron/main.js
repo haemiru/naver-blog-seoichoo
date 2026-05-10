@@ -1,12 +1,17 @@
 const path = require('path');
 const { app, BrowserWindow, ipcMain } = require('electron');
 
-// 패키징된 .exe는 실행파일 옆의 .env를, 개발 모드는 프로젝트 루트의 .env를 읽는다
-const envPath = app.isPackaged
-  ? path.join(path.dirname(process.execPath), '.env')
-  : path.join(__dirname, '..', '.env');
+// 패키징된 .exe는 실행파일 옆의 .env를, 개발 모드는 프로젝트 루트의 .env를 읽는다.
+// portable 빌드는 임시 폴더에 압축 해제되므로 process.execPath가 아닌
+// PORTABLE_EXECUTABLE_DIR 환경변수가 원본 .exe 위치를 가리킨다.
+function resolveAppRoot() {
+  if (!app.isPackaged) return path.join(__dirname, '..');
+  return process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(process.execPath);
+}
+const APP_ROOT_FOR_USER_FILES = resolveAppRoot();
+const envPath = path.join(APP_ROOT_FOR_USER_FILES, '.env');
 require('dotenv').config({ path: envPath });
-console.log('[main] .env loaded from:', envPath);
+console.log('[main] .env loaded from:', envPath, 'key set:', Boolean(process.env.ANTHROPIC_API_KEY));
 const { loginToNaver } = require('../src/naver/login');
 const { getRecentPosts } = require('../src/naver/myBlog');
 const { extractKeywords } = require('../src/ai/extractKeywords');
@@ -17,8 +22,7 @@ const { sleep, randomDelaySeconds } = require('../src/utils/delay');
 const { cleanupSessionLocks } = require('../src/utils/cleanup');
 const fs = require('fs');
 
-const APP_ROOT = app.isPackaged ? path.dirname(process.execPath) : path.join(__dirname, '..');
-const LOGS_DIR = path.join(APP_ROOT, 'logs');
+const LOGS_DIR = path.join(APP_ROOT_FOR_USER_FILES, 'logs');
 function ensureLogsDir() {
   if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
 }

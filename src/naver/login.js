@@ -2,11 +2,14 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-// 패키징(.exe) 시 __dirname이 asar 내부라 쓰기 불가 → process.execPath 옆으로
+// 패키징(.exe) 시 __dirname이 asar 내부라 쓰기 불가.
+// portable 빌드는 PORTABLE_EXECUTABLE_DIR이 원본 .exe 위치를 가리킨다.
 const PACKAGED = __dirname.includes('app.asar');
-const SESSION_DIR = PACKAGED
-  ? path.join(path.dirname(process.execPath), 'session')
-  : path.join(__dirname, '..', '..', 'session');
+function appRoot() {
+  if (!PACKAGED) return path.join(__dirname, '..', '..');
+  return process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(process.execPath);
+}
+const SESSION_DIR = path.join(appRoot(), 'session');
 const NAVER_LOGIN_URL = 'https://nid.naver.com/nidlogin.login';
 const NAVER_HOME_URL = 'https://www.naver.com';
 

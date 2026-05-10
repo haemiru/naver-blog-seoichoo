@@ -2,9 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 const PACKAGED = __dirname.includes('app.asar');
-const LOGS_DIR = PACKAGED
-  ? path.join(path.dirname(process.execPath), 'logs')
-  : path.join(__dirname, '..', '..', 'logs');
+function appRoot() {
+  if (!PACKAGED) return path.join(__dirname, '..', '..');
+  return process.env.PORTABLE_EXECUTABLE_DIR || path.dirname(process.execPath);
+}
+const LOGS_DIR = path.join(appRoot(), 'logs');
 
 function ensureLogsDir() {
   if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
