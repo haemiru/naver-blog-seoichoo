@@ -11,27 +11,40 @@
     <h1>네이버 블로그 서로이웃</h1>
     <p class="subtitle">본인 계정 · 소량 테스트 용도</p>
 
-    <form id="login-form">
-      <label>
-        네이버 ID
-        <input type="text" id="naverId" autocomplete="off" required />
-      </label>
+    <!-- 1단계: 로그인 폼 -->
+    <section id="step-login">
+      <form id="login-form">
+        <label>
+          네이버 ID
+          <input type="text" id="naverId" autocomplete="off" required />
+        </label>
+        <label>
+          비밀번호
+          <input type="password" id="password" autocomplete="off" required />
+        </label>
+        <label>
+          이웃추가 수
+          <input type="number" id="neighborCount" min="1" max="30" value="10" required />
+          <span class="hint">1 ~ 30 (안전을 위해 최대 30 제한)</span>
+        </label>
+        <button type="submit" id="discover-btn">시작 (후보 검색)</button>
+      </form>
+    </section>
 
-      <label>
-        비밀번호
-        <input type="password" id="password" autocomplete="off" required />
-      </label>
-
-      <label>
-        이웃추가 수
-        <input type="number" id="neighborCount" min="1" max="30" value="10" required />
-        <span class="hint">1 ~ 30 (안전을 위해 최대 30 제한)</span>
-      </label>
-
-      <button type="submit" id="submit-btn">시작</button>
-    </form>
-
+    <!-- 진행 상황 -->
     <div id="status" class="status" hidden></div>
+
+    <!-- 2단계: 후보 선택 -->
+    <section id="step-candidates" hidden>
+      <h2>후보 블로거</h2>
+      <p class="hint" id="candidates-summary"></p>
+      <div class="actions">
+        <button type="button" class="btn-secondary" id="select-all">전체 선택</button>
+        <button type="button" class="btn-secondary" id="deselect-all">전체 해제</button>
+      </div>
+      <ul id="candidates-list" class="candidates"></ul>
+      <button type="button" id="apply-btn">선택한 N명 이웃 신청</button>
+    </section>
 
     <p class="warning">⚠ 네이버 약관상 자동화는 금지됩니다. 본인 책임 하에 사용하세요.</p>
   </main>

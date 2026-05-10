@@ -1,11 +1,52 @@
 const form = document.getElementById('login-form');
-const submitBtn = document.getElementById('submit-btn');
+const discoverBtn = document.getElementById('discover-btn');
 const statusEl = document.getElementById('status');
+
+const stepLogin = document.getElementById('step-login');
+const stepCandidates = document.getElementById('step-candidates');
+const candidatesList = document.getElementById('candidates-list');
+const candidatesSummary = document.getElementById('candidates-summary');
+const selectAllBtn = document.getElementById('select-all');
+const deselectAllBtn = document.getElementById('deselect-all');
+const applyBtn = document.getElementById('apply-btn');
+
+let neededCount = 10;
 
 function showStatus(message, type) {
   statusEl.hidden = false;
   statusEl.textContent = message;
   statusEl.className = `status status-${type}`;
+}
+
+function updateApplyBtnLabel() {
+  const checked = candidatesList.querySelectorAll('input[type="checkbox"]:checked').length;
+  applyBtn.textContent = `선택한 ${checked}명 이웃 신청`;
+  applyBtn.disabled = checked === 0;
+}
+
+function renderCandidates(candidates, needed) {
+  candidatesList.innerHTML = '';
+  candidates.forEach((c, idx) => {
+    const li = document.createElement('li');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = idx < needed; // 상위 needed명 기본 체크
+    checkbox.dataset.blogId = c.blogId;
+    checkbox.addEventListener('change', updateApplyBtnLabel);
+
+    const label = document.createElement('label');
+    label.className = 'candidate';
+    label.appendChild(checkbox);
+
+    const text = document.createElement('span');
+    text.innerHTML = `<strong>${c.blogId}</strong> <span class="kw">${c.hitKeywords.join(' · ')}</span>`;
+    label.appendChild(text);
+
+    li.appendChild(label);
+    candidatesList.appendChild(li);
+  });
+  candidatesSummary.textContent = `총 ${candidates.length}명 발견. 상위 ${needed}명 기본 체크됨.`;
+  updateApplyBtnLabel();
 }
 
 window.api.onProgress((message) => {
@@ -14,7 +55,6 @@ window.api.onProgress((message) => {
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-
   const naverId = document.getElementById('naverId').value.trim();
   const password = document.getElementById('password').value;
   const neighborCount = parseInt(document.getElementById('neighborCount').value, 10);
@@ -28,15 +68,51 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  submitBtn.disabled = true;
+  neededCount = neighborCount;
+  discoverBtn.disabled = true;
   showStatus('처리 중...', 'info');
 
   try {
-    const result = await window.api.startAutomation({ naverId, password, neighborCount });
-    showStatus(result.message || '완료', result.ok ? 'success' : 'error');
+    const result = await window.api.startDiscovery({ naverId, password, neighborCount });
+    if (!result.ok) {
+      showStatus(`오류: ${result.message}`, 'error');
+      discoverBtn.disabled = false;
+      return;
+    }
+    showStatus(result.message, 'success');
+    renderCandidates(result.candidates, neighborCount);
+    stepCandidates.hidden = false;
+  } catch (err) {
+    showStatus(`오류: ${err.message}`, 'error');
+    discoverBtn.disabled = false;
+  }
+});
+
+selectAllBtn.addEventListener('click', () => {
+  candidatesList.querySelectorAll('input[type="checkbox"]').forEach((cb) => { cb.checked = true; });
+  updateApplyBtnLabel();
+});
+
+deselectAllBtn.addEventListener('click', () => {
+  candidatesList.querySelectorAll('input[type="checkbox"]').forEach((cb) => { cb.checked = false; });
+  updateApplyBtnLabel();
+});
+
+applyBtn.addEventListener('click', async () => {
+  const selected = Array.from(candidatesList.querySelectorAll('input[type="checkbox"]:checked'))
+    .map((cb) => cb.dataset.blogId);
+  if (selected.length === 0) return;
+
+  applyBtn.disabled = true;
+  showStatus(`${selected.length}명 이웃 신청 시작...`, 'info');
+
+  try {
+    const result = await window.api.startApplying({ blogIds: selected });
+    showStatus(result.message, result.ok ? 'success' : 'error');
   } catch (err) {
     showStatus(`오류: ${err.message}`, 'error');
   } finally {
-    submitBtn.disabled = false;
+    applyBtn.disabled = false;
+    updateApplyBtnLabel();
   }
 });

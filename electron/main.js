@@ -12,9 +12,9 @@ let activeContext = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 480,
-    height: 560,
-    resizable: false,
+    width: 520,
+    height: 800,
+    resizable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -49,56 +49,50 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
-ipcMain.handle('start-automation', async (_event, payload) => {
+let discoveryState = null; // { naverId, posts, keywords, candidates }
+
+ipcMain.handle('start-discovery', async (_event, payload) => {
   const { naverId, password, neighborCount } = payload;
   try {
-    const { context } = await loginToNaver({
-      naverId,
-      password,
-      onProgress: sendProgress,
-    });
+    const { context } = await loginToNaver({ naverId, password, onProgress: sendProgress });
     activeContext = context;
 
-    const posts = await getRecentPosts({
-      context,
-      naverId,
-      count: 3,
-      onProgress: sendProgress,
-    });
-
+    const posts = await getRecentPosts({ context, naverId, count: 3, onProgress: sendProgress });
     console.log('[main] scraped posts:');
-    posts.forEach((p, i) => {
-      console.log(`  ${i + 1}. ${p.title} (${p.body.length}자) — ${p.url}`);
-    });
+    posts.forEach((p, i) => console.log(`  ${i + 1}. ${p.title} (${p.body.length}자)`));
 
     sendProgress('Claude Haiku로 키워드 추출 중...');
     const keywords = await extractKeywords(posts, 5);
     console.log('[main] extracted keywords:', keywords);
 
     const candidates = await findCandidateBloggers({
-      context,
-      keywords,
-      excludeId: naverId,
-      needed: neighborCount,
-      perKeyword: 10,
+      context, keywords, excludeId: naverId, needed: neighborCount, perKeyword: 10,
       onProgress: sendProgress,
     });
     console.log(`[main] candidates (${candidates.length}):`);
-    candidates.forEach((c, i) => {
-      console.log(`  ${i + 1}. ${c.blogId} score=${c.score} [${c.hitKeywords.join(', ')}]`);
-    });
+    candidates.forEach((c, i) =>
+      console.log(`  ${i + 1}. ${c.blogId} score=${c.score} [${c.hitKeywords.join(', ')}]`));
 
-    const summary = posts.map((p, i) => `${i + 1}. ${p.title || '(제목없음)'}`).join('\n');
-    const candidateList = candidates
-      .slice(0, neighborCount)
-      .map((c, i) => `${i + 1}. ${c.blogId} (${c.hitKeywords.join('+')})`)
-      .join('\n');
-
+    discoveryState = { naverId, posts, keywords, candidates };
     return {
       ok: true,
-      message: `최근 글 ${posts.length}개 수집.\n${summary}\n\n추출 키워드: ${keywords.join(', ')}\n\n후보 블로거 ${candidates.length}명 발견 (상위 ${neighborCount}명):\n${candidateList}\n\n다음 단계에서 신청 UI 표시 예정.`,
+      message: `키워드: ${keywords.join(', ')}`,
+      candidates,
     };
   } catch (err) {
     return { ok: false, message: err.message };
   }
+});
+
+ipcMain.handle('start-applying', async (_event, payload) => {
+  const { blogIds } = payload;
+  if (!discoveryState) return { ok: false, message: '먼저 후보 검색을 실행하세요.' };
+  if (!activeContext) return { ok: false, message: '로그인 세션이 없습니다.' };
+
+  console.log('[main] start-applying:', blogIds);
+  // 8단계에서 실제 신청 로직 연결
+  return {
+    ok: true,
+    message: `${blogIds.length}명 신청 요청 수신 (실제 신청 로직은 8단계에서 연결).`,
+  };
 });

@@ -50,7 +50,9 @@ label {
   gap: 6px;
 }
 
-input {
+input[type="text"],
+input[type="password"],
+input[type="number"] {
   padding: 10px 12px;
   border: 1px solid #d8dadf;
   border-radius: 6px;
@@ -58,9 +60,18 @@ input {
   font-family: inherit;
 }
 
-input:focus {
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus {
   outline: none;
   border-color: #03c75a;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #03c75a;
+  cursor: pointer;
 }
 
 .hint {
@@ -121,4 +132,76 @@ button:disabled {
   color: #c47700;
   text-align: center;
   line-height: 1.5;
+}
+
+#step-candidates {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+#step-candidates h2 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.btn-secondary {
+  margin-top: 0;
+  padding: 6px 12px;
+  background: #f1f3f5;
+  color: #444;
+  font-size: 12px;
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e6e8eb;
+}
+
+.candidates {
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.candidates li {
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.candidates li:last-child { border-bottom: none; }
+
+.candidate {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.candidate:hover {
+  background: #f8f9fa;
+}
+
+.candidate input[type="checkbox"] {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.candidate .kw {
+  color: #888;
+  font-size: 11px;
+  margin-left: 6px;
 }
