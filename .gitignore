@@ -6,5 +6,6 @@ logs/
 dist/
 out/
 build/
+.claude/
 .DS_Store
 Thumbs.db
