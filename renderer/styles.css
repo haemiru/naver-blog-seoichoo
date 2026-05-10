@@ -205,3 +205,58 @@ button:disabled {
   font-size: 11px;
   margin-left: 6px;
 }
+
+#step-results {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 16px;
+}
+
+#step-results h2 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.results {
+  list-style: none;
+  margin-top: 12px;
+}
+
+.result {
+  border-left: 3px solid #ddd;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: #fafafa;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.result-success { border-left-color: #03c75a; }
+.result-already_buddy { border-left-color: #888; }
+.result-rejected { border-left-color: #b7791f; background: #fff8e6; }
+.result-not_found { border-left-color: #aaa; }
+.result-error { border-left-color: #b83232; background: #fff0f0; }
+
+.result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.result-status {
+  font-size: 11px;
+  color: #555;
+}
+
+.result-msg {
+  color: #555;
+  font-style: italic;
+}
+
+.result-detail {
+  margin-top: 4px;
+  color: #b83232;
+  font-size: 11px;
+  word-break: break-all;
+}

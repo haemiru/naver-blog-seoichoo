@@ -9,6 +9,20 @@ const { findCandidateBloggers } = require('../src/naver/search');
 const { applyNeighbor } = require('../src/naver/neighbor');
 const { generateGreeting } = require('../src/ai/generateGreeting');
 const { sleep, randomDelaySeconds } = require('../src/utils/delay');
+const { cleanupSessionLocks } = require('../src/utils/cleanup');
+const fs = require('fs');
+
+const LOGS_DIR = path.join(__dirname, '..', 'logs');
+function ensureLogsDir() {
+  if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
+}
+function saveResultsJson(payload) {
+  ensureLogsDir();
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const file = path.join(LOGS_DIR, `results_${ts}.json`);
+  fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf8');
+  return file;
+}
 
 let mainWindow;
 let activeContext = null;
@@ -39,7 +53,10 @@ function sendProgress(message) {
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  cleanupSessionLocks();
+  createWindow();
+});
 
 app.on('window-all-closed', async () => {
   if (activeContext) {
@@ -87,14 +104,20 @@ ipcMain.handle('start-discovery', async (_event, payload) => {
   }
 });
 
+// 같은 세션 내에서 한 번 신청 보낸 ID 기록 (중복 방지)
+const appliedInSession = new Set();
+
 ipcMain.handle('start-applying', async (_event, payload) => {
   const { blogIds } = payload;
   if (!discoveryState) return { ok: false, message: '먼저 후보 검색을 실행하세요.' };
   if (!activeContext) return { ok: false, message: '로그인 세션이 없습니다.' };
 
-  // 하드 캡: 한 회 최대 30건
-  const targets = blogIds.slice(0, 30);
-  console.log('[main] start-applying:', targets);
+  // 하드 캡: 한 회 최대 30건, 세션 내 중복 제외
+  const targets = blogIds
+    .filter((id) => !appliedInSession.has(id))
+    .slice(0, 30);
+  const skippedDuplicates = blogIds.length - targets.length;
+  console.log(`[main] start-applying: ${targets.length} targets (skipped ${skippedDuplicates} duplicates)`);
 
   const counts = { success: 0, already_buddy: 0, rejected: 0, not_found: 0, error: 0 };
   const results = [];
@@ -121,8 +144,9 @@ ipcMain.handle('start-applying', async (_event, payload) => {
       message,
       onLog: (m) => console.log(m),
     });
+    appliedInSession.add(blogId);
     counts[r.status] = (counts[r.status] || 0) + 1;
-    results.push({ blogId, keyword, message, ...r });
+    results.push({ blogId, keyword, message, status: r.status, detail: r.detail || null });
 
     if (i < targets.length - 1) {
       const delaySec = randomDelaySeconds(30, 90);
@@ -139,10 +163,28 @@ ipcMain.handle('start-applying', async (_event, payload) => {
     `오류 ${counts.error || 0}`,
   ].join(' · ');
 
+  let resultFile = null;
+  try {
+    resultFile = saveResultsJson({
+      timestamp: new Date().toISOString(),
+      naverId: discoveryState.naverId,
+      keywords: discoveryState.keywords,
+      counts,
+      skippedDuplicates,
+      results,
+    });
+    console.log('[main] results saved:', resultFile);
+  } catch (err) {
+    console.warn('[main] failed to save results:', err.message);
+  }
+
   console.log('[main] applying done:', summary);
   return {
     ok: true,
-    message: `완료. ${summary}`,
+    message: `완료. ${summary}${skippedDuplicates ? ` (중복 ${skippedDuplicates} 스킵)` : ''}`,
+    summary,
+    counts,
     results,
+    resultFile,
   };
 });

@@ -4,6 +4,10 @@ const statusEl = document.getElementById('status');
 
 const stepLogin = document.getElementById('step-login');
 const stepCandidates = document.getElementById('step-candidates');
+const stepResults = document.getElementById('step-results');
+const resultsSummary = document.getElementById('results-summary');
+const resultsList = document.getElementById('results-list');
+const resultsFile = document.getElementById('results-file');
 const candidatesList = document.getElementById('candidates-list');
 const candidatesSummary = document.getElementById('candidates-summary');
 const selectAllBtn = document.getElementById('select-all');
@@ -98,6 +102,30 @@ deselectAllBtn.addEventListener('click', () => {
   updateApplyBtnLabel();
 });
 
+function renderResults(result) {
+  resultsList.innerHTML = '';
+  for (const r of result.results || []) {
+    const li = document.createElement('li');
+    li.className = `result result-${r.status}`;
+    const statusLabel = {
+      success: '✅ 성공',
+      already_buddy: '🔁 이미이웃',
+      rejected: '🚫 거부',
+      not_found: '❓ 없음',
+      error: '⚠ 오류',
+    }[r.status] || r.status;
+    const detail = r.detail ? `<div class="result-detail">${r.detail}</div>` : '';
+    li.innerHTML = `
+      <div class="result-head"><strong>${r.blogId}</strong> <span class="result-status">${statusLabel}</span></div>
+      <div class="result-msg">"${r.message}"</div>
+      ${detail}
+    `;
+    resultsList.appendChild(li);
+  }
+  resultsSummary.textContent = result.summary || result.message;
+  resultsFile.textContent = result.resultFile ? `결과 저장: ${result.resultFile}` : '';
+}
+
 applyBtn.addEventListener('click', async () => {
   const selected = Array.from(candidatesList.querySelectorAll('input[type="checkbox"]:checked'))
     .map((cb) => cb.dataset.blogId);
@@ -109,6 +137,11 @@ applyBtn.addEventListener('click', async () => {
   try {
     const result = await window.api.startApplying({ blogIds: selected });
     showStatus(result.message, result.ok ? 'success' : 'error');
+    if (result.ok) {
+      renderResults(result);
+      stepCandidates.hidden = true;
+      stepResults.hidden = false;
+    }
   } catch (err) {
     showStatus(`오류: ${err.message}`, 'error');
   } finally {

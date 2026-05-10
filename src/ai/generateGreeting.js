@@ -21,7 +21,7 @@ async function generateGreeting({ keyword }) {
 조건:
 - 친근하지만 절제된 톤 (반말 사용 금지, 정중한 존댓말)
 - 광고성 표현, 이모지, 느낌표 사용 금지
-- 25자 이내
+- 35자 이내, 마침표로 끝나는 완결된 문장
 - 상대 블로그 주제: "${keyword}"
 - 따옴표 없이 메시지 본문 1문장만 응답
 
@@ -41,10 +41,13 @@ async function generateGreeting({ keyword }) {
     .replace(/^["'`]|["'`]$/g, '')
     .replace(/\n+/g, ' ');
 
-  // 25자 초과 시 잘라내고 마침표
-  if (text.length > 30) {
-    return text.slice(0, 28).replace(/[\s,]*$/, '') + '.';
+  // 50자 초과만 잘라내기 (어색한 잘림 방지)
+  if (text.length > 50) {
+    const cut = text.slice(0, 48).replace(/[\s,]*$/, '');
+    return /[.!?。]$/.test(cut) ? cut : cut + '.';
   }
+  // 마침표 없이 끝나면 추가
+  if (!/[.!?。]$/.test(text)) return text + '.';
   return text;
 }
 
