@@ -1,7 +1,12 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-
 const { app, BrowserWindow, ipcMain } = require('electron');
+
+// 패키징된 .exe는 실행파일 옆의 .env를, 개발 모드는 프로젝트 루트의 .env를 읽는다
+const envPath = app.isPackaged
+  ? path.join(path.dirname(process.execPath), '.env')
+  : path.join(__dirname, '..', '.env');
+require('dotenv').config({ path: envPath });
+console.log('[main] .env loaded from:', envPath);
 const { loginToNaver } = require('../src/naver/login');
 const { getRecentPosts } = require('../src/naver/myBlog');
 const { extractKeywords } = require('../src/ai/extractKeywords');
@@ -12,7 +17,8 @@ const { sleep, randomDelaySeconds } = require('../src/utils/delay');
 const { cleanupSessionLocks } = require('../src/utils/cleanup');
 const fs = require('fs');
 
-const LOGS_DIR = path.join(__dirname, '..', 'logs');
+const APP_ROOT = app.isPackaged ? path.dirname(process.execPath) : path.join(__dirname, '..');
+const LOGS_DIR = path.join(APP_ROOT, 'logs');
 function ensureLogsDir() {
   if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
 }

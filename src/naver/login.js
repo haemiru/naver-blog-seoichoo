@@ -2,7 +2,11 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const SESSION_DIR = path.join(__dirname, '..', '..', 'session');
+// 패키징(.exe) 시 __dirname이 asar 내부라 쓰기 불가 → process.execPath 옆으로
+const PACKAGED = __dirname.includes('app.asar');
+const SESSION_DIR = PACKAGED
+  ? path.join(path.dirname(process.execPath), 'session')
+  : path.join(__dirname, '..', '..', 'session');
 const NAVER_LOGIN_URL = 'https://nid.naver.com/nidlogin.login';
 const NAVER_HOME_URL = 'https://www.naver.com';
 

@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const SESSION_DIR = path.join(__dirname, '..', '..', 'session');
+const PACKAGED = __dirname.includes('app.asar');
+const SESSION_DIR = PACKAGED
+  ? path.join(path.dirname(process.execPath), 'session')
+  : path.join(__dirname, '..', '..', 'session');
 
 /**
  * 이전 실행에서 남은 Chromium Singleton 락 파일을 제거한다.

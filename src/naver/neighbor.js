@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const LOGS_DIR = path.join(__dirname, '..', '..', 'logs');
+const PACKAGED = __dirname.includes('app.asar');
+const LOGS_DIR = PACKAGED
+  ? path.join(path.dirname(process.execPath), 'logs')
+  : path.join(__dirname, '..', '..', 'logs');
 
 function ensureLogsDir() {
   if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });

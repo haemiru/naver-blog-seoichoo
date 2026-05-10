@@ -16,7 +16,7 @@
 6. 한 명씩 서로이웃 신청 (인사말 자동 생성, 30~90초 랜덤 딜레이)
 7. 결과 리포트
 
-## 설치
+## 설치 (개발)
 
 ```bash
 npm install
@@ -24,6 +24,20 @@ npx playwright install chromium
 cp .env.example .env   # ANTHROPIC_API_KEY 채우기
 npm start
 ```
+
+## .exe 빌드 (배포)
+
+Windows 개발자 모드를 먼저 켜야 합니다 (electron-builder의 mac dylib 심볼릭 링크 추출 때문).
+
+```bash
+npm run dist             # portable .exe → dist/naver-blog-seoichoo-<ver>.exe
+npm run dist:installer   # NSIS 설치 파일 (선택)
+```
+
+**.exe 사용 시 주의**:
+- `.exe`와 같은 폴더에 `.env` 파일을 두어야 ANTHROPIC_API_KEY가 로드됩니다
+- 실행 시 같은 폴더에 `session/`, `logs/`가 자동 생성됩니다 (각각 로그인 세션, 결과·디버그 스크린샷)
+- Playwright Chromium은 번들되지 않습니다. 새 PC라면 `npx playwright install chromium` 한 번 실행 필요
 
 ## 스택
 

@@ -5,18 +5,50 @@
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "dist": "electron-builder --win portable",
+    "dist:installer": "electron-builder --win nsis"
   },
-  "keywords": ["naver", "blog", "automation"],
+  "keywords": [
+    "naver",
+    "blog",
+    "automation"
+  ],
   "author": "",
   "license": "UNLICENSED",
   "private": true,
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",
     "dotenv": "^16.4.5",
     "playwright": "^1.48.0"
+  },
+  "build": {
+    "appId": "com.naverblog.seoichoo",
+    "productName": "naver-blog-seoichoo",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "src/**/*",
+      "package.json",
+      "!**/*.md"
+    ],
+    "asarUnpack": [
+      "node_modules/playwright/**/*",
+      "node_modules/playwright-core/**/*"
+    ],
+    "win": {
+      "target": "portable",
+      "artifactName": "naver-blog-seoichoo-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "naver-blog-seoichoo-${version}.exe"
+    }
   }
 }
