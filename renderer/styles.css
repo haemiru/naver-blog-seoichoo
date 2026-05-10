@@ -96,6 +96,8 @@ button:disabled {
   padding: 10px 12px;
   border-radius: 6px;
   font-size: 13px;
+  white-space: pre-line;
+  line-height: 1.5;
 }
 
 .status-info {
