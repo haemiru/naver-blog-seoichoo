@@ -1,0 +1,22 @@
+{
+  "name": "naver-blog-seoichoo",
+  "version": "0.1.0",
+  "description": "네이버 블로그 서로이웃 자동 신청 도구 (본인 계정 소량 테스트용)",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": ["naver", "blog", "automation"],
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "electron": "^33.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.48.0"
+  }
+}
